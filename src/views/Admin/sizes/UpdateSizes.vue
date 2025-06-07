@@ -11,7 +11,7 @@
       <!-- Form -->
       <v-col cols="12">
         <v-card class="pa-6 elevation-3 rounded-lg">
-          <v-form>
+          <v-form ref="form" v-model="valid" lazy-validation>
             <!-- Tên kích thước -->
             <v-text-field
               v-model="sizesName"
@@ -22,12 +22,18 @@
               color="primary"
               rounded-lg
               class="mb-4"
+              :rules="[rules.required]"
               required
             ></v-text-field>
 
             <!-- Nút Sửa -->
             <div class="d-flex justify-end rounded-lg">
-              <v-btn color="primary" size="large" @click="submitSizes">
+              <v-btn
+                color="primary"
+                size="large"
+                :disabled="!valid"
+                @click="submitSizes"
+              >
                 Chỉnh sửa
               </v-btn>
             </div>
@@ -35,18 +41,51 @@
         </v-card>
       </v-col>
     </v-row>
+
+    <!-- Snackbar -->
+    <v-snackbar
+      v-model="snackbar"
+      :color="snackbarColor"
+      timeout="3000"
+      top
+      right
+      elevation="2"
+    >
+      {{ snackbarMessage }}
+      <template #actions>
+        <v-btn icon @click="snackbar = false">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
   </v-container>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import sizesService from '@/services/Admin/sizes'; // Đường dẫn service của bạn
+import sizesService from '@/services/Admin/sizes';
 
 const sizesName = ref('');
+const form = ref(null);
+const valid = ref(false);
 const route = useRoute();
 const router = useRouter();
 const id = route.params.id;
+
+const snackbar = ref(false);
+const snackbarMessage = ref('');
+const snackbarColor = ref('');
+
+const rules = {
+  required: v => !!v || 'Trường này không được để trống',
+};
+
+function showSnackbar(message, color = 'success') {
+  snackbarMessage.value = message;
+  snackbarColor.value = color;
+  snackbar.value = true;
+}
 
 onMounted(async () => {
   try {
@@ -55,23 +94,25 @@ onMounted(async () => {
     if (size) {
       sizesName.value = size.name;
     } else {
-      alert('Không tìm thấy kích thước!');
+      showSnackbar('Không tìm thấy kích thước!', 'error');
     }
   } catch (error) {
     console.error('Lỗi khi load kích thước:', error);
-    alert('Không thể tải thông tin kích thước');
+    showSnackbar('Không thể tải thông tin kích thước', 'error');
   }
 });
 
 async function submitSizes() {
+  if (!form.value.validate()) return;
+
   try {
     const updatedSize = { name: sizesName.value };
     await sizesService.updateSizes(id, updatedSize);
-    alert('Cập nhật thành công!');
+    showSnackbar('Cập nhật thành công!', 'success');
     router.push('/admin/sizes');
   } catch (error) {
     console.error('Lỗi khi cập nhật kích thước:', error);
-    alert('Cập nhật thất bại!');
+    showSnackbar('Cập nhật thất bại!', 'error');
   }
 }
 </script>

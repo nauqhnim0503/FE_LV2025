@@ -11,7 +11,7 @@
       <!-- Form -->
       <v-col cols="12">
         <v-card class="pa-6 elevation-3 rounded-lg">
-          <v-form>
+          <v-form ref="form" v-model="isFormValid">
             <!-- Tên thương hiệu -->
             <v-text-field
               v-model="brandName"
@@ -22,6 +22,7 @@
               color="primary"
               rounded-lg
               class="mb-4"
+              :rules="brandNameRules"
               required
             ></v-text-field>
 
@@ -37,38 +38,77 @@
               rounded-lg
               show-size
               class="mb-6"
+              :rules="brandImageRules"
             ></v-file-input>
 
             <!-- Nút Sửa -->
-             <div class="d-flex justify-end rounded-lg">
-            <v-btn color="primary" size="large" @click="submitBrands">
-              Chỉnh sửa
-            </v-btn>
+            <div class="d-flex justify-end rounded-lg">
+              <v-btn color="primary" size="large" @click="submitBrands">
+                Chỉnh sửa
+              </v-btn>
             </div>
           </v-form>
         </v-card>
       </v-col>
     </v-row>
+
+    <!-- Snackbar -->
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      timeout="3000"
+      location="bottom right"
+      rounded="lg"
+    >
+      {{ snackbar.message }}
+      <template #actions>
+        <v-btn icon @click="snackbar.show = false">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
   </v-container>
 </template>
 
+
 <script setup>
-import { ref,onMounted } from 'vue';
-import { useRouter,useRoute } from 'vue-router';
-import brandService from '@/services/Admin/brands'; // đường dẫn điều chỉnh tùy thư mục
+import { ref, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import brandService from '@/services/Admin/brands';
 
 const brandName = ref('');
 const brandImage = ref(null);
-const route = useRoute();
+const oldImage = ref('');
+const form = ref(null);
+const isFormValid = ref(false);
 const router = useRouter();
-
+const route = useRoute();
 const id = route.params.id;
-const oldImage = ref(''); // dùng nếu không cập nhật ảnh mới
 
-// Load dữ liệu hiện tại của brand
+// Snackbar
+const snackbar = ref({
+  show: false,
+  message: '',
+  color: 'success'
+});
+
+// Ràng buộc tên thương hiệu
+const brandNameRules = [
+  v => !!v || 'Tên thương hiệu là bắt buộc',
+  v => (v && v.length >= 2) || 'Tên phải có ít nhất 2 ký tự',
+  v => (v && v.length <= 50) || 'Tên tối đa 50 ký tự',
+];
+
+// Ràng buộc ảnh (tùy chọn: chỉ khi có ảnh mới)
+const brandImageRules = [
+  v => !v || v.type.startsWith('image/') || 'Tập tin phải là hình ảnh',
+  v => !v || v.size <= 2 * 1024 * 1024 || 'Dung lượng hình ảnh tối đa 2MB',
+];
+
+// Load dữ liệu thương hiệu
 onMounted(async () => {
   try {
-    const res = await brandService.getBrandsList(); // hoặc gọi /brands/:id nếu API có
+    const res = await brandService.getBrandsList(); // hoặc gọi getBrand(id)
     const brand = res.data.data.find(b => b.id === parseInt(id));
     if (brand) {
       brandName.value = brand.name;
@@ -79,30 +119,37 @@ onMounted(async () => {
   }
 });
 
+// Gửi cập nhật
 async function submitBrands() {
+  const isValid = await form.value?.validate();
+  if (!isValid.valid) return;
+
   const formData = new FormData();
   formData.append('name', brandName.value);
-  
   if (brandImage.value) {
     formData.append('image', brandImage.value);
   } else {
-    formData.append('image', oldImage.value); // Gửi lại hình cũ nếu không đổi
+    formData.append('image', oldImage.value);
   }
 
   try {
-    const res = await brandService.updateBrand(id, formData);
-    alert('✅ Chỉnh sửa thành công!');
-    router.push({ name: 'brandsManagement' });
+    await brandService.updateBrand(id, formData);
+    snackbar.value = {
+      show: true,
+      message: '✅ Chỉnh sửa thành công!',
+      color: 'success'
+    };
+    setTimeout(() => {
+      router.push({ name: 'brandsManagement' });
+    }, 1500);
   } catch (error) {
-    console.error(' Lỗi khi cập nhật thương hiệu:', error);
-    alert(' Lỗi khi cập nhật thương hiệu.');
+    console.error('Lỗi khi cập nhật thương hiệu:', error);
+    snackbar.value = {
+      show: true,
+      message: '❌ Cập nhật thất bại!',
+      color: 'error'
+    };
   }
 }
 </script>
 
-<style scoped>
-h3 {
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
-}
-</style>

@@ -11,7 +11,7 @@
       <!-- Form -->
       <v-col cols="12">
         <v-card class="pa-6 elevation-3 rounded-lg">
-          <v-form>
+          <v-form ref="form" v-model="isFormValid">
             <!-- Tên thương hiệu -->
             <v-text-field
               v-model="brandName"
@@ -22,9 +22,10 @@
               color="primary"
               rounded-lg
               class="mb-4"
+              :rules="brandNameRules"
               required
             ></v-text-field>
-            
+
             <!-- Ảnh thương hiệu -->
             <v-file-input
               v-model="brandImage"
@@ -37,59 +38,102 @@
               rounded-lg
               show-size
               class="mb-6"
+              :rules="brandImageRules"
+              required
             ></v-file-input>
 
             <!-- Nút Thêm -->
-             <div class="d-flex justify-end rounded-lg">
-            <v-btn color="primary" size="large" @click="submitBrand">
-              <v-icon start>mdi-plus</v-icon>
-              Thêm thương hiệu
-            </v-btn>
+            <div class="d-flex justify-end rounded-lg">
+              <v-btn color="primary" size="large" @click="submitBrand">
+                <v-icon start>mdi-plus</v-icon>
+                Thêm thương hiệu
+              </v-btn>
             </div>
           </v-form>
         </v-card>
       </v-col>
     </v-row>
+
+    <!-- Snackbar -->
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      timeout="3000"
+      location="bottom right"
+      rounded="lg"
+    >
+      {{ snackbar.message }}
+      <template #actions>
+        <v-btn icon @click="snackbar.show = false">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
   </v-container>
 </template>
+
+
 
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import brandService from '@/services/Admin/brands'; // đường dẫn điều chỉnh tùy thư mục
+import brandService from '@/services/Admin/brands';
 
 const brandName = ref('');
 const brandImage = ref(null);
+const isFormValid = ref(false);
+const form = ref(null);
 const router = useRouter();
 
+// Snackbar thông báo
+const snackbar = ref({
+  show: false,
+  message: '',
+  color: 'success'
+});
+
+// Ràng buộc
+const brandNameRules = [
+  v => !!v || 'Tên thương hiệu là bắt buộc',
+  v => (v && v.length >= 2) || 'Tên phải có ít nhất 2 ký tự',
+  v => (v && v.length <= 50) || 'Tên tối đa 50 ký tự',
+];
+
+const brandImageRules = [
+  v => !!v || 'Vui lòng chọn hình ảnh',
+  v => !v || v.type.startsWith('image/') || 'Tập tin phải là hình ảnh',
+  v => !v || v.size <= 2 * 1024 * 1024 || 'Dung lượng hình ảnh tối đa 2MB',
+];
+
+// Gửi dữ liệu
 async function submitBrand() {
-  if (!brandName.value || !brandImage.value) {
-    alert('Vui lòng nhập đầy đủ tên và chọn hình ảnh!');
-    return;
-  }
+  const isValid = await form.value?.validate();
+  if (!isValid.valid) return;
 
   try {
-    // Nếu ảnh đã là URL: bạn gán trực tiếp
     const newBrand = {
       name: brandName.value,
-      image: brandImage.value, // Nếu upload, thì xử lý upload trước
+      image: brandImage.value
     };
 
     await brandService.createBrand(newBrand);
-    alert('Thêm thương hiệu thành công!');
-    router.push('/admin/brands');
+
+    snackbar.value = {
+      show: true,
+      message: 'Thêm thương hiệu thành công!',
+      color: 'success'
+    };
+
+    setTimeout(() => {
+      router.push('/admin/brands');
+    }, 1500);
   } catch (error) {
     console.error('Lỗi khi thêm thương hiệu:', error);
-    alert('Thêm thương hiệu thất bại!');
+    snackbar.value = {
+      show: true,
+      message: 'Đã xảy ra lỗi khi thêm thương hiệu!',
+      color: 'error'
+    };
   }
 }
-
 </script>
-
-
-<style scoped>
-h3 {
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
-}
-</style>

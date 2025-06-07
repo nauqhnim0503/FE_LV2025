@@ -11,7 +11,7 @@
       <!-- Form chính -->
       <v-col cols="12">
         <v-card class="pa-6 elevation-3 rounded-lg">
-          <v-form>
+          <v-form ref="formRef">
             <v-row>
               <!-- Cột trái -->
               <v-col cols="12" md="8">
@@ -23,6 +23,7 @@
                   variant="outlined"
                   dense
                   rounded="lg"
+                  :rules="[required]"
                 ></v-text-field>
 
                 <v-row>
@@ -34,6 +35,7 @@
                       variant="outlined"
                       dense
                       rounded="lg"
+                      :rules="[required, positiveNumber]"
                     ></v-text-field>
                   </v-col>
                   <v-col cols="6" class="d-flex align-center">
@@ -56,6 +58,7 @@
                       density="compact"
                       rounded="lg"
                       clearable
+                      :rules="[required]"
                     ></v-select>
                   </v-col>
                   <v-col cols="6">
@@ -69,6 +72,7 @@
                       density="compact"
                       rounded="lg"
                       clearable
+                      :rules="[required]"
                     ></v-select>
                   </v-col>
                 </v-row>
@@ -78,6 +82,7 @@
                   label="Mô tả sản phẩm"
                   rows="4"
                   variant="outlined"
+                  :rules="[required]"
                   rounded="lg"
                 ></v-textarea>
 
@@ -107,6 +112,7 @@
                             item-value="id"
                             label="Kích thước"
                             variant="outlined"
+                            :rules="[required]"
                             dense
                             clearable
                             @change="handleVariantChange(index)"
@@ -120,6 +126,7 @@
                             item-value="id"
                             label="Màu sắc"
                             variant="outlined"
+                            :rules="[required]"
                             dense
                             clearable
                             @change="handleVariantChange(index)"
@@ -131,6 +138,7 @@
                             label="Số lượng"
                             type="number"
                             variant="outlined"
+                            :rules="[required,positiveNumber]"
                             dense
                           ></v-text-field>
                         </v-col>
@@ -238,6 +246,7 @@
               v-model="newColor.name"
               variant="outlined"
               prepend-inner-icon="mdi-palette"
+              :rules="[required]"
               prepend-icon=""
               dense
             ></v-text-field>
@@ -246,6 +255,7 @@
               v-model="newColor.code"
               accept="image/*"
               prepend-inner-icon="mdi-image"
+              :rules="[required]"
               prepend-icon=""
               variant="outlined"
               dense
@@ -267,6 +277,9 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import productService from '@/services/Admin/products'
 
+const required = (v) => !!v || 'Trường này là bắt buộc.'
+const positiveNumber = (v) => (!v || v > 0) || 'Phải là số dương.'
+const formRef = ref(null)
 // === State chính cho sản phẩm ===
 const product = ref({
   name: '',
@@ -380,6 +393,12 @@ onMounted(async () => {
 
 // === Gửi dữ liệu sản phẩm ===
 const submitProduct = async () => {
+  const isValid = await formRef.value?.validate?.()
+  if (!isValid) {
+    showSnackbar('Vui lòng kiểm tra lại các trường nhập liệu.')
+    return
+  }
+
   const formData = new FormData()
   formData.append('name', product.value.name)
   formData.append('price', product.value.price)
