@@ -59,8 +59,7 @@
                   density="comfortable"
                   variant="text"
                   color="primary"
-                  :to="{ name: 'updateBrand',params: { id: item.id } }"
-                >
+                  :to="{ name: 'updateBrand',params: { id: item.id } }">
                   <v-icon>mdi-pencil</v-icon>
                 </v-btn>
               </template>
@@ -104,7 +103,9 @@
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import { useSnackbar } from '@/composables/useSnackbar';
 
+const{showSnackbar} = useSnackbar()
 const search = ref('');
 const brands = ref([]);
 const router = useRouter();
@@ -146,15 +147,15 @@ async function deleteBrand() {
     
     if (res.data.success) {
       brands.value = brands.value.filter(b => b.id !== brandToDelete.value.id);
-      alert('Xóa thương hiệu thành công');
+      showSnackbar('Xóa thương hiệu thành công','success');
     } else {
-      alert(res.data.message || 'Có lỗi xảy ra');
+      showSnackbar(res.data.message || 'Có lỗi xảy ra','eror');
     }
   } catch (error) {
     if (error.response && error.response.status === 400) {
-      alert(error.response.data.message);
+      showSnackbar(error.response.data.message,'error');
     } else {
-      alert('Lỗi máy chủ khi xóa thương hiệu');
+      showSnackbar('Lỗi máy chủ khi xóa thương hiệu','error');
     }
   } finally {
     deleteDialog.value = false;

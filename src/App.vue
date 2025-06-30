@@ -1,18 +1,21 @@
 <template>
   <v-app>
     <v-main>
-      <login-view/>      <router-view/>
+      <router-view />
     </v-main>
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      location="top right"
+      timeout="3000"
+    >
+      {{ snackbar.message }}
+    </v-snackbar>
   </v-app>
 </template>
 
-<script>
+<script setup>
+import { useSnackbar } from '@/composables/useSnackbar'
 
-export default {
-  name: 'App',
-
-  data: () => ({
-    //
-  }),
-}
+const { snackbar } = useSnackbar()
 </script>

@@ -4,6 +4,7 @@
     height="550"
     hide-delimiter-background
     show-arrows="hover"
+    class="custom-carousel"
   >
     <v-carousel-item
       v-for="(slide, i) in slides"
@@ -15,8 +16,7 @@
         height="100%"
         class="d-flex align-center justify-center"
         style="background: rgba(0,0,0,0)"
-      >
-      </v-sheet>
+      />
     </v-carousel-item>
   </v-carousel>
 </template>
@@ -44,3 +44,11 @@ export default {
   }
 }
 </script>
+<style scoped>
+.custom-carousel .v-window__container {
+  transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out !important;
+}
+.custom-carousel .v-carousel-item {
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+</style>

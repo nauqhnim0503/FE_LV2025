@@ -7,6 +7,7 @@
       </div>
 
       <form @submit.prevent="login">
+        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
         
         <input id="username" v-model="username" type="text" placeholder="Nhập tên..." />
 
@@ -28,21 +29,52 @@
   </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      username: '',
-      password: '',
-    };
-  },
-  methods: {
-    login() {
-      console.log('Login:', this.username, this.password);
-    },
-  },
-};
+<script setup>
+import { ref } from 'vue'
+import { useRouter,useRoute } from 'vue-router'
+import { saveUserSession } from '@/store/auth'
+import { loginUser } from '@/services/auth/auth.service'
+
+const username = ref('')
+const password = ref('')
+const router = useRouter()
+const route = useRoute()
+const errorMessage = ref('')
+
+async function login() {
+  if (!username.value || !password.value) {
+  errorMessage.value = 'Vui lòng nhập đầy đủ thông tin'
+  return
+  }
+
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/
+  if (!emailRegex.test(username.value)) {
+    errorMessage.value = 'Tài khoản phải là địa chỉ Gmail hợp lệ'
+    return
+  }
+
+  try {
+    const response = await loginUser({
+      email: username.value,
+      password: password.value
+    })
+
+    if (!response || !response.token || !response.data) {
+      throw new Error('Tài khoản hoặc mật khẩu không đúng')
+    }
+
+    const { token, data: user } = response
+    saveUserSession(token, user)
+
+    const redirectTo = route.query.redirect || '/'
+    router.push(redirectTo)
+  } catch (err) {
+    console.error('Lỗi đăng nhập:', err)
+    errorMessage.value = err.message || 'Đăng nhập thất bại'
+  }
+}
 </script>
+
 
 <style scoped>
 .login-container {
@@ -183,5 +215,11 @@ input:focus {
   padding: 8px 16px;
   border-radius: 50%;
   cursor: pointer;
+}
+.error-message {
+  color: #d9534f;
+  font-size: 14px;
+  margin-bottom: 10px;
+  text-align: center;
 }
 </style>

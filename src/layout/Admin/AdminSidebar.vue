@@ -70,14 +70,14 @@
     data() {
       return {
         user: {
-          name: "Minh Quân",
-          email: "minhquan2002tv@gmail.com",
+          name: "Admin",
+          email: "admin@gmail.com",
           avatar: "https://randomuser.me/api/portraits/men/85.jpg"
         },
         menuItems: [
-          { title: "Dashboard", icon: "mdi-view-dashboard", route: "/admin" },
+          { title: "Dashboard", icon: "mdi-view-dashboard", route: "/admin/dashboard" },
            { title: " Quản lý",
-            icon: "mdi-flower",
+            icon: "mdi-package",
             children: [
               { title: "Thương hiệu", icon: "mdi-tag", route: "/admin/brands" },
               { title: "Danh mục", icon: "mdi-format-list-bulleted", route: "/admin/categories" },
@@ -86,8 +86,9 @@
               { title: "Kích thước", icon: "mdi-ruler", route: "/admin/sizes" }
             ]
             },
-          { title: "Đơn hàng", icon: "mdi-cart", to: "/admin/orders" },
-          { title: "Đánh giá", icon: "mdi-flower", to: "/admin/products" },
+          { title: "Đơn hàng", icon: "mdi-cart", route: "/admin/order" },
+          { title: "Mã giảm giá", icon: "mdi-sale", route: "/admin/discount" },
+          { title: "Đánh giá", icon: "mdi-flower", route: "/admin/ratings" },
         ]
       }
     }

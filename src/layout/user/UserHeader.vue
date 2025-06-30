@@ -41,25 +41,49 @@
       />
     </v-btn>
 
-    <!-- Đăng nhập -->
-    <v-btn
-      prepend-icon="mdi-account"
-      color="primary"
-      to="/login"
-    >
-      Đăng nhập
-    </v-btn>
+    <!-- Nếu đã đăng nhập -->
+<template v-if="user">
+  <v-menu offset-y>
+    <template #activator="{ props }">
+      <v-btn v-bind="props" prepend-icon="mdi-account" color="primary">
+        {{ user.name }}
+        <v-icon end>mdi-menu-down</v-icon>
+      </v-btn>
+    </template>
+    <v-list>
+      <v-list-item @click="router.push('/account')">
+        <v-list-item-title>Thông tin tài khoản</v-list-item-title>
+      </v-list-item>
+      <v-list-item @click="router.push('/order')">
+        <v-list-item-title>Đơn hàng của tôi</v-list-item-title>
+      </v-list-item>
+      <v-list-item @click="logout">
+        <v-list-item-title>Đăng xuất</v-list-item-title>
+      </v-list-item>
+    </v-list>
+  </v-menu>
+</template>
+
+<!-- Nếu chưa đăng nhập -->
+<template v-else>
+  <v-btn prepend-icon="mdi-account" color="primary" to="/login">
+    Đăng nhập
+  </v-btn>
+</template>
   </v-app-bar>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref,onMounted,computed } from 'vue'
 import { useRouter } from 'vue-router'
-import logo from '@/assets/images/logo.png' // Đã import đúng
+import { useCart } from '@/store/useCart'
+import { getUser } from '@/store/auth'
+import logo from '@/assets/images/logo.png' 
+import { clearUserSession } from '@/store/auth'
 
 const router = useRouter()
-
-const cartCount = ref(0) // Tạm thời cho là 0 hoặc liên kết Vuex/pinia sau
+const user = ref(null)
+const { cartCount } = useCart() // Đếm số mặt hàng hiện lên giỏ
 
 const menuItems = [
   { title: 'Trang chủ', icon: 'mdi-home', route: '/' },
@@ -67,6 +91,18 @@ const menuItems = [
   { title: 'Giới thiệu', icon: 'mdi-information', route: '/about' },
   { title: 'Liên hệ', icon: 'mdi-phone', route: '/contact' }
 ]
+onMounted(() => {
+  user.value = getUser()
+})
+const loginText = computed(() => {
+  return user.value ? `${user.value.name}!` : 'Đăng nhập'
+})
+const logout = () => {
+  // Clear session/localStorage hoặc state quản lý user
+  clearUserSession() // hoặc useAuthStore().logout() nếu dùng pinia
+  user.value = null
+  router.push('/')
+}
 </script>
 
 <style scoped>

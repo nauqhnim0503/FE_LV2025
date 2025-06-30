@@ -18,6 +18,7 @@
               label="Tên thương hiệu"
               placeholder="Nhập tên thương hiệu"
               prepend-inner-icon="mdi-tag"
+              
               variant="solo"
               color="primary"
               rounded-lg
@@ -27,24 +28,42 @@
             ></v-text-field>
 
             <!-- Ảnh thương hiệu -->
-            <v-file-input
+           <v-file-input
               v-model="brandImage"
               label="Chọn hình ảnh thương hiệu"
               accept="image/*"
+              variant="solo"
               prepend-inner-icon="mdi-image"
               prepend-icon=""
-              variant="solo"
               color="primary"
               rounded-lg
               show-size
               class="mb-6"
               :rules="brandImageRules"
               required
-            ></v-file-input>
-
+              @update:model-value="handleImageChange">
+              <template #selection="{ fileNames }">
+                <div class="d-flex align-center">
+                  <v-img
+                    v-if="imagePreview"
+                    :src="imagePreview"
+                    width="80"
+                    height="100"
+                    class="mr-3 rounded"
+                    cover>
+                    <template v-slot:placeholder>
+                      <div class="d-flex align-center justify-center fill-height">
+                        <v-progress-circular indeterminate color="grey lighten-2" />
+                      </div>
+                    </template>
+                  </v-img>
+                  <span>{{ fileNames.length ? fileNames[0] : 'Chưa chọn file' }}</span>
+                </div>
+              </template>
+            </v-file-input>
             <!-- Nút Thêm -->
             <div class="d-flex justify-end rounded-lg">
-              <v-btn color="primary" size="large" @click="submitBrand">
+              <v-btn color="primary" size="large" :loading="loading" :disabled="loading" @click="submitBrand">
                 <v-icon start>mdi-plus</v-icon>
                 Thêm thương hiệu
               </v-btn>
@@ -53,50 +72,62 @@
         </v-card>
       </v-col>
     </v-row>
-
-    <!-- Snackbar -->
-    <v-snackbar
-      v-model="snackbar.show"
-      :color="snackbar.color"
-      timeout="3000"
-      location="bottom right"
-      rounded="lg"
-    >
-      {{ snackbar.message }}
-      <template #actions>
-        <v-btn icon @click="snackbar.show = false">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </template>
-    </v-snackbar>
   </v-container>
 </template>
 
 
 
 <script setup>
-import { ref } from 'vue';
+import { ref,onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import brandService from '@/services/Admin/brands';
+import axios from 'axios'
+import { useSnackbar,  } from '@/composables/useSnackbar';
+
+const {showSnackbar} = useSnackbar()
+const loading = ref(false)
 
 const brandName = ref('');
 const brandImage = ref(null);
+const imagePreview = ref(null);
 const isFormValid = ref(false);
 const form = ref(null);
 const router = useRouter();
+const brands = ref([])
 
-// Snackbar thông báo
-const snackbar = ref({
-  show: false,
-  message: '',
-  color: 'success'
+
+onMounted(async () => {
+  if (imagePreview.value) {
+    URL.revokeObjectURL(imagePreview.value);
+  }
+  try {
+    const res = await axios.get('http://localhost:3000/brands');
+    brands.value = res.data.data;
+  } catch (err) {
+    console.error('Lỗi khi fetch brands:', err);
+  }
 });
-
+function handleImageChange(file) {
+  if (imagePreview.value) {
+    URL.revokeObjectURL(imagePreview.value);
+    imagePreview.value = null;
+  }
+  if (file && file instanceof File) {
+    imagePreview.value = URL.createObjectURL(file);
+  }
+}
 // Ràng buộc
 const brandNameRules = [
   v => !!v || 'Tên thương hiệu là bắt buộc',
   v => (v && v.length >= 2) || 'Tên phải có ít nhất 2 ký tự',
   v => (v && v.length <= 50) || 'Tên tối đa 50 ký tự',
+  v => {
+    const exists = brands.value.some(
+      (brand) => brand.name.toLowerCase() === v.toLowerCase()
+    )
+    return !exists || 'Tên thương hiệu này đã tồn tại!'
+  }
+  
 ];
 
 const brandImageRules = [
@@ -110,6 +141,8 @@ async function submitBrand() {
   const isValid = await form.value?.validate();
   if (!isValid.valid) return;
 
+  loading.value = true
+
   try {
     const newBrand = {
       name: brandName.value,
@@ -117,23 +150,17 @@ async function submitBrand() {
     };
 
     await brandService.createBrand(newBrand);
-
-    snackbar.value = {
-      show: true,
-      message: 'Thêm thương hiệu thành công!',
-      color: 'success'
-    };
+    showSnackbar('Thêm thương hiệu thành công','success');
 
     setTimeout(() => {
       router.push('/admin/brands');
     }, 1500);
   } catch (error) {
     console.error('Lỗi khi thêm thương hiệu:', error);
-    snackbar.value = {
-      show: true,
-      message: 'Đã xảy ra lỗi khi thêm thương hiệu!',
-      color: 'error'
-    };
+    showSnackbar('Đã xảy ra lỗi khi thêm thương hiệu','error')
+    ;
+  }finally {
+    loading.value = false  
   }
 }
 </script>
