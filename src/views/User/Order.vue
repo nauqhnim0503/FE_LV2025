@@ -181,7 +181,7 @@
     </v-card-actions>
   </v-card>
 </v-dialog>
-
+  <FloatingContact />
 </template>
 
 <script setup>
@@ -190,6 +190,7 @@ import { ref, computed, onMounted,watch } from 'vue'
 import { getUser } from '@/store/auth'
 import { useSnackbar  } from '@/composables/useSnackbar'
 import { useRouter } from 'vue-router'
+import FloatingContact from '@/components/FloatingContact.vue'
 
 const router = useRouter()
 const loading = ref(false)
@@ -253,12 +254,22 @@ const fetchOrders = async () => {
   try {
     const response = await axios.get(`http://localhost:3000/users/order/${userId}`)
     if (response.data.success) {
-      orders.value = response.data.data.map(order => ({
-        ...order,
-        created_at: order.createdAt,
-        orderItems: order.orderItems || [], // Cập nhật sau nếu có dữ liệu chi tiết
-      }))
-    } 
+      const ordersData = response.data.data
+      if (ordersData.length === 0) {
+        // Chưa có đơn hàng, có thể xử lý UI riêng (vd: hiện "Bạn chưa có đơn hàng")
+        orders.value = []
+        // Không báo lỗi
+      } else {
+        orders.value = ordersData.map(order => ({
+          ...order,
+          created_at: order.createdAt,
+          orderItems: order.orderItems || [],
+        }))
+      }
+    } else {
+      // Nếu success = false thì báo lỗi
+      showSnackbar('Lỗi khi tải đơn hàng', 'error')
+    }
   } catch (error) {
     showSnackbar('Lỗi khi tải đơn hàng', 'error')
     console.error(error)
@@ -266,6 +277,7 @@ const fetchOrders = async () => {
     loading.value = false
   }
 }
+
 // Lấy màu và size
 const fetchColorsAndSizes = async () => {
   try {

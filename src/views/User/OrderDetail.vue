@@ -153,12 +153,14 @@
       </v-col>
     </v-row>
   </v-container>
+  <FloatingContact />
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
+import FloatingContact from '@/components/FloatingContact.vue'
 
 const route = useRoute()
 const orderId = route.params.id

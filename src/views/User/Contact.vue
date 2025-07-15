@@ -37,9 +37,12 @@
       </v-col>
     </v-row>
   </v-container>
+  <FloatingContact />
 </template>
 
 <script setup>
+import FloatingContact from '@/components/FloatingContact.vue'
+
 </script>
 
 <style scoped>

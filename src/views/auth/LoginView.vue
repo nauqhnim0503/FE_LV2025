@@ -12,9 +12,22 @@
         <input id="username" v-model="username" type="text" placeholder="Nhập tên..." />
 
         
-        <input id="password" v-model="password" type="password" placeholder="Nhập mật khẩu..." />
+        <div class="password-field">
+          <input
+            id="password"
+            :type="isPasswordVisible ? 'text' : 'password'"
+            v-model="password"
+            placeholder="Nhập mật khẩu..."/>
+          <v-icon
+            class="eye-icon"
+            @click="isPasswordVisible = !isPasswordVisible"
+            color="grey darken-1"
+            size="20">
+            {{ isPasswordVisible ? 'mdi-eye-off' : 'mdi-eye' }}
+          </v-icon>
+        </div>
 
-        <div class="forgot">Quên mật khẩu?</div>
+        <router-link to="/forgot-password" class="forgot">Quên mật khẩu?</router-link>
         <button type="submit" class="login-btn">Đăng nhập <span>&rarr;</span></button>
       </form>
 
@@ -22,18 +35,19 @@
         <span>Hoặc</span>
       </div>
 
-      <div class="social-login">
-        <span class="social-icon">G</span>
-      </div>
+      <div id="google-signin" class="social-login"></div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref,onMounted } from 'vue'
 import { useRouter,useRoute } from 'vue-router'
 import { saveUserSession } from '@/store/auth'
 import { loginUser } from '@/services/auth/auth.service'
+import axios from 'axios'
+
+const isPasswordVisible = ref(false)
 
 const username = ref('')
 const password = ref('')
@@ -41,6 +55,35 @@ const router = useRouter()
 const route = useRoute()
 const errorMessage = ref('')
 
+onMounted(() => {
+  window.google.accounts.id.initialize({
+    client_id: '672590852123-a30l6u2g28e5a85edq87nbb8cdkm8l4s.apps.googleusercontent.com',
+    callback: handleCredentialResponse,
+  })
+
+  window.google.accounts.id.renderButton(
+    document.getElementById('google-signin'),
+    {
+      theme: 'outline',
+      size: 'large',
+      width: '100%',
+    }
+  )
+})
+async function handleCredentialResponse(response) {
+  try {
+    const res = await axios.post('http://localhost:3000/auth/google/callback', {
+      token: response.credential
+    })
+
+    const { token, data: user } = res.data
+    saveUserSession(token, user)
+    router.push('/')
+  } catch (err) {
+    console.error('Google login failed:', err)
+    alert('Đăng nhập Google thất bại!')
+  }
+}
 async function login() {
   if (!username.value || !password.value) {
   errorMessage.value = 'Vui lòng nhập đầy đủ thông tin'
@@ -160,6 +203,8 @@ input:focus {
 }
 
 .forgot {
+  text-decoration: none;
+  display: block;
   text-align: right;
   font-size: 13px;
   margin-bottom: 15px;
@@ -222,4 +267,36 @@ input:focus {
   margin-bottom: 10px;
   text-align: center;
 }
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  width: 100%;
+  padding: 15px 35px 15px 0; /* chừa chỗ cho icon bên phải */
+  border: none;
+  border-bottom: 2px solid #ccc;
+  background: transparent;
+  color: black;
+  outline: none;
+  transition: border-color 0.3s;
+  margin: 10px 0;
+}
+
+.password-field input::placeholder {
+  color: #c6c6c6;
+}
+
+.password-field input:focus {
+  border-bottom: 2px solid #D37171;
+}
+
+.eye-icon {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
 </style>

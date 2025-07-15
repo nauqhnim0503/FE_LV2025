@@ -276,31 +276,27 @@
           width: 100%;
           box-sizing: border-box;">
         <div class="text-subtitle-2 font-weight-medium mb-3 font-title">Chọn màu</div>
-<div class="d-flex flex-wrap" style="gap: 8px;">
-  <div
-  v-for="color in availableColors"
-  :key="color"
-  :class="[
-    'variant-option',
-    { 
-      active: selectedColor === color,
-      dimmed: selectedSize && !filteredColors.includes(color)
-    }
-  ]"
-  @click="() => {
-    if (selectedSize && !filteredColors.includes(color)) {
-      selectedColor = color
-      selectedSize = ''
-      outOfStock = true  // <-- thêm dòng này
-    } else {
-      selectedColor = color
-      outOfStock = false  // <-- reset khi chọn đúng
-    }
-  }"
->
-  {{ color }}
-</div>
-
+          <div class="d-flex flex-wrap" style="gap: 8px;">
+            <div
+            v-for="color in availableColors"
+            :key="color"
+            :class="[
+              'variant-option',
+              { 
+                active: selectedColor === color,
+                dimmed: selectedSize && !filteredColors.includes(color)
+              }]"
+            @click="() => {
+              if (selectedSize && !filteredColors.includes(color)) {
+                selectedColor = color
+                selectedSize = ''
+                outOfStock = true  // <-- thêm dòng này
+              } else {
+                selectedColor = color
+                outOfStock = false  // <-- reset khi chọn đúng
+              }}">
+            {{ color }}
+          </div>
 </div>
 
       </v-card-text>
@@ -314,35 +310,28 @@
           width: 100%;
           box-sizing: border-box;">
         <div class="text-subtitle-2 font-weight-medium mb-3 font-title">Chọn kích thước</div>
-<div class="d-flex flex-wrap" style="gap: 8px;">
-  <div
-  v-for="size in availableSizes"
-  :key="size"
-  :class="[
-    'variant-option',
-    { 
-      active: selectedSize === size,
-      dimmed: selectedColor && !filteredSizes.includes(size)
-    }
-  ]"
-  @click="() => {
-    if (selectedColor && !filteredSizes.includes(size)) {
-      selectedSize = size
-      selectedColor = ''
-      outOfStock = true  // <-- thêm dòng này
-    } else {
-      selectedSize = size
-      outOfStock = false // <-- reset khi chọn đúng
-    }
-  }"
->
-  {{ size }}
-</div>
-
-
-
-</div>
-
+        <div class="d-flex flex-wrap" style="gap: 8px;">
+          <div
+          v-for="size in availableSizes"
+          :key="size"
+          :class="[
+            'variant-option',
+            { 
+              active: selectedSize === size,
+              dimmed: selectedColor && !filteredSizes.includes(size)
+            }]"
+          @click="() => {
+            if (selectedColor && !filteredSizes.includes(size)) {
+              selectedSize = size
+              selectedColor = ''
+              outOfStock = true  // <-- thêm dòng này
+            } else {
+              selectedSize = size
+              outOfStock = false // <-- reset khi chọn đúng
+            }}">
+          {{ size }}
+        </div>
+        </div>
       </v-card-text>
     </div>
 
@@ -351,9 +340,7 @@
       style="
         padding: 0 16px 16px 16px;
         margin-top: 0;
-        background: transparent;
-      "
-    >
+        background: transparent;">
       <v-btn
         color="black"
         variant="flat"
@@ -375,10 +362,52 @@
             label="Mã giảm giá"
             append-inner-icon="mdi-tag"
             dense
-            variant="outlined"
-          />
+            variant="outlined"/>
+            <div class="text-caption text-primary mt-1" style="cursor: pointer;" @click="openDiscountDialog">
+              🔖 Xem các mã giảm giá đã lưu
+            </div>
           <v-btn class="mt-2" block @click="applyDiscount" color="black" dark>Áp dụng</v-btn>
         </v-card>
+        <v-dialog v-model="showSavedCodes" width="500">
+          <v-card>
+            <v-card-title class="text-h6 font-title">Chọn mã giảm giá</v-card-title>
+            <v-divider />
+          
+            <v-card-text>
+              <v-radio-group v-model="selectedDiscountCode">
+                <v-radio
+                  v-for="(code, index) in savedCodes"
+                  :key="index"
+                  :value="code.code"
+                  class="my-2">
+                  <template #label>
+                    <div>
+                      <strong>{{ code.code }}</strong>
+                      <div class="text-caption text-grey">
+                        Giảm 
+                        <span v-if="code.discount_type === 'fixed'">
+                          {{ code.discount_value.toLocaleString('vi-VN') }}₫
+                        </span>
+                        <span v-else-if="code.discount_type === 'percent'">
+                          {{ code.discount_value }}%
+                        </span>
+                        <span v-if="code.min_order_value">
+                          đơn từ {{ code.min_order_value.toLocaleString('vi-VN') }}₫
+                        </span>
+                      </div>
+                    </div>
+                  </template>
+                </v-radio>
+              </v-radio-group>
+            </v-card-text>
+          
+            <v-card-actions class="justify-end">
+              <v-btn text @click="showSavedCodes = false">Hủy</v-btn>
+              <v-btn color="black" @click="applySelectedDiscount">Áp dụng</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
 
         <!-- Tóm tắt đơn hàng -->
         <v-card class="pa-4" elevation="2" style="border-radius: 15px">
@@ -467,6 +496,9 @@ const shipping = ref({
 
 const paymentMethod = ref('cod')
 const discountCode = ref('')
+const showSavedCodes = ref(false)
+const savedCodes = ref([])
+const selectedDiscountCode = ref('')
 const discountAmount = ref(0)
 const appliedDiscountId = ref(null)
 
@@ -567,7 +599,6 @@ watch(() => shipping.value.district, async (newDistrict) => {
 })
 
 // -- Methods -
-
 const increaseQty = (item) => {
   if (item.quantity < item.maxQuantity) {
     if (cartItems.value.find(i => i.id === item.id)) {
@@ -677,6 +708,41 @@ const applyDiscount = async () => {
     console.error('Lỗi khi áp dụng mã giảm giá:', error)
     showSnackbar('Không thể áp dụng mã giảm giá. Vui lòng thử lại.', 'error')
   }
+}
+const openDiscountDialog = async () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('savedDiscounts') || '[]')
+    const res = await axios.get('http://localhost:3000/discount_codes/home')
+    const allDiscounts = res.data.data || []
+
+    // Lọc để hiển thị (không ghi đè vào localStorage)
+    const validDiscounts = saved.filter(discount => {
+      const d = allDiscounts.find(x => x.code === discount.code)
+      if (!d) return false
+
+      const now = new Date()
+
+      const isStarted = new Date(d.start_date) <= now
+      const notExpired = new Date(d.end_date) > now
+      const notUsedUp = d.used_count < d.usage_limit
+      const isActive = d.is_active
+      const meetsOrderValue = originalTotal.value >= d.min_order_value
+      return notExpired && notUsedUp && isActive && meetsOrderValue && isStarted
+    })
+    savedCodes.value = validDiscounts
+    selectedDiscountCode.value = discountCode.value
+    showSavedCodes.value = true
+
+  } catch (err) {
+    console.error('Không thể tải hoặc kiểm tra mã đã lưu:', err)
+    showSnackbar('Không thể tải danh sách mã giảm giá đã lưu.', 'error')
+  }
+}
+
+
+const applySelectedDiscount = () => {
+  discountCode.value = selectedDiscountCode.value
+  showSavedCodes.value = false
 }
 
 

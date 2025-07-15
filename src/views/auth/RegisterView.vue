@@ -46,13 +46,6 @@
         <div v-if="serverError" class="server-error">{{ serverError }}</div>
       </form>
 
-      <div class="divider">
-        <span>Hoặc</span>
-      </div>
-
-      <div class="social-login">
-        <span class="social-icon">G</span>
-      </div>
     </div>
   </div>
 </template>

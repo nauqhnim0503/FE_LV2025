@@ -22,12 +22,12 @@ export function useSnackbar() {
 }
 
   return {
-    snackbar,
-    showSnackbar,
-    hideSnackbar,
-    success: (msg) => showSnackbar(msg, 'success', loading),
-    error: (msg) => showSnackbar(msg, 'error', loading),
-    info: (msg) => showSnackbar(msg, 'info', loading),
-    warning: (msg) => showSnackbar(msg, 'warning', loading),
-  }
+  snackbar,
+  showSnackbar,
+  hideSnackbar,
+  success: (msg, loading = false) => showSnackbar(msg, 'success', loading),
+  error: (msg, loading = false) => showSnackbar(msg, 'error', loading),
+  info: (msg, loading = false) => showSnackbar(msg, 'info', loading),
+  warning: (msg, loading = false) => showSnackbar(msg, 'warning', loading),
+}
 }

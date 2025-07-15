@@ -261,11 +261,23 @@ const filteredStats = ref({
   days: 0,
   revenueByDate: []
 })
+import { useSnackbar } from '@/composables/useSnackbar'
+const { showSnackbar } = useSnackbar()
+
 const getStatsFromOrders = () => {
-  if (!fromDate.value || !toDate.value) return
+  if (!fromDate.value || !toDate.value) {
+    showSnackbar('Vui lòng chọn khoảng thời gian!', 'warning')
+    return
+  }
 
   const startDate = new Date(fromDate.value)
   const endDate = new Date(toDate.value)
+
+  if (startDate > endDate) {
+    showSnackbar('Thời gian kết thúc phải lớn hơn thời gian bắt đầu!', 'error')
+    return
+  }
+
   endDate.setHours(23, 59, 59, 999)
 
   // Lọc đơn hàng trong khoảng thời gian
@@ -287,7 +299,6 @@ const getStatsFromOrders = () => {
     map.set(date, map.get(date) + (order.total_amount || 0))
   })
 
-  // Tạo đầy đủ ngày trong khoảng và gán doanh thu 0 nếu không có dữ liệu
   const revenueByDate = []
   for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
     const dateStr = d.toISOString().slice(0, 10)
@@ -305,6 +316,7 @@ const getStatsFromOrders = () => {
     revenueByDate
   }
 }
+
 
 onMounted(async () => {
   try {

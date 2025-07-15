@@ -289,7 +289,8 @@ const filteredOrders = computed(() => {
     const matchSearch =
       (!keyword) ||
       (order.user?.name && order.user?.name.toLowerCase().includes(keyword)) ||
-      (order.id && order.id.toLowerCase().includes(keyword)) ||
+      (order.product?.name && order.product?.name.toLowerCase().includes(keyword)) ||
+      (order?.comment && order?.comment.toLowerCase().includes(keyword)) ||
       (order.user?.phone && order.user?.phone.includes(keyword));
 
         const matchRating = selectedRating.value === null || order.star_rating === Number(selectedRating.value);

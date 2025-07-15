@@ -311,7 +311,16 @@
         </v-fab-transition>
   </v-col>
 </v-row>
-
+<v-row justify="center" class="my-6">
+  <v-container style="max-width: 100%; overflow-x: auto;">
+    <v-pagination
+      v-if="totalPages > 1"
+      v-model="currentPage"
+      :length="totalPages"
+      @update:modelValue="onPageChange"
+      color="primary"/>
+  </v-container>
+</v-row>
 
 <v-row v-if="products.length === 0 && !loading" class="text-center py-10">
   <v-col cols="12">
@@ -323,12 +332,14 @@
 </v-row>
 
   </v-container>
+  <FloatingContact />
 </template>
 
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
 import axios from 'axios'
 import debounce from 'lodash/debounce'
+import FloatingContact from '@/components/FloatingContact.vue'
 
 // Các reactive state
 const products = ref([])
@@ -337,6 +348,8 @@ const selectedBrand = ref('Tất cả')
 const sortOption = ref('')
 const searchText = ref('')
 const loading = ref(false)
+const currentPage = ref(1)
+const totalPages = ref(1)
 //bảng lọc
 const drawer = ref(false)
 const selectedColor = ref(null)
@@ -345,7 +358,9 @@ const selectedPriceRange = ref(null)
 const debouncedFetch = debounce(() => {
   fetchProducts()
 }, 500)
-
+const onPageChange = () => {
+  fetchProducts()
+}
 watch(searchText, debouncedFetch)
 
 const clearFilters = () => {
@@ -356,6 +371,7 @@ const clearFilters = () => {
   selectedColor.value = null
   selectedSize.value = null
   selectedPriceRange.value = null
+  currentPage.value = 1
   fetchProducts()
 }
 
@@ -396,6 +412,7 @@ const priceRanges = [
   { label: 'Trên 5,000,000₫', min: 5000000, max: Infinity }
 ]
 const applyFilters = () => {
+  currentPage.value = 1
   fetchProducts()
   drawer.value = false
 }
@@ -405,7 +422,8 @@ const fetchProducts = async () => {
   try {
     const range = (selectedPriceRange.value !== null) ? priceRanges[selectedPriceRange.value] : {}
     const params = {
-      limit: 100,
+      page: currentPage.value,
+      limit: 8,
       keyword: searchText.value || undefined,
       categoryName: selectedCategory.value !== 'Tất cả' ? selectedCategory.value : undefined,
       brandName: selectedBrand.value !== 'Tất cả' ? selectedBrand.value : undefined,
@@ -422,6 +440,8 @@ const fetchProducts = async () => {
     
     const res = await axios.get('http://localhost:3000/productall', { params })
     products.value = res.data.data
+    totalPages.value = res.data.pagination?.totalPages || 1
+    console.log('Total pages:', totalPages.value)
   } catch (error) {
     console.error('Lỗi khi lấy sản phẩm:', error)
   } finally {

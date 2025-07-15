@@ -157,6 +157,7 @@
       </v-col>
     </v-row>
   </v-container>
+  <FloatingContact />
 </template>
 
 <script setup>
@@ -165,6 +166,8 @@ import { useCart } from '@/store/useCart'
 import { useRouter } from 'vue-router'
 import { getToken } from '@/store/auth'
 import { useSnackbar} from  '@/composables/useSnackbar'
+import FloatingContact from '@/components/FloatingContact.vue'
+
 const {showSnackbar} = useSnackbar()
 
 const router = useRouter()

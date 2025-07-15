@@ -74,7 +74,7 @@
 </template>
 
 <script setup>
-import { ref,onMounted,computed } from 'vue'
+import { ref,onMounted,computed,watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCart } from '@/store/useCart'
 import { getUser } from '@/store/auth'
@@ -82,7 +82,7 @@ import logo from '@/assets/images/logo.png'
 import { clearUserSession } from '@/store/auth'
 
 const router = useRouter()
-const user = ref(null)
+const user = ref(getUser())
 const { cartCount } = useCart() // Đếm số mặt hàng hiện lên giỏ
 
 const menuItems = [
@@ -103,6 +103,12 @@ const logout = () => {
   user.value = null
   router.push('/')
 }
+watch(
+  () => router.currentRoute.value.fullPath,
+  () => {
+    user.value = getUser()
+  }
+)
 </script>
 
 <style scoped>

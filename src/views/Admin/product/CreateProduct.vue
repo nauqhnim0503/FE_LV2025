@@ -152,7 +152,7 @@
     <!-- Dialog tạo nhanh biến thể -->
     <v-dialog v-model="quickCreateDialog" max-width="500">
       <v-card>
-        <v-card-title class="headline">Tạo nhanh biến thể</v-card-title>
+        <v-card-title class="headline">Tạo mới biến thể</v-card-title>
         <v-card-text>
           <v-form ref="quickCreateForm">
             <v-text-field

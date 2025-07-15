@@ -227,13 +227,13 @@
       key: 'id',
       align: 'center',
       width: '60',
-      sortable: false
     },
     {
       title: 'Tên sản phẩm',
       key: 'name',
       align: 'start',
-      width: '200'
+      width: '200',
+      sortable: false
     },
     {
       title: 'Ảnh sản phẩm',

@@ -265,17 +265,59 @@
     </div>
   </v-col>
 </v-row>
+<!-- GỢI Ý SẢN PHẨM CÙNG DANH MỤC (SLIDER NGANG) -->
+<v-row class="mt-10">
+  <v-col cols="12">
+    <h3 class="text-h6 mb-4 font-weight-bold">Sản phẩm cùng danh mục</h3>
 
+    <v-slide-group show-arrows >
+      <v-slide-group-item
+        v-for="item in relatedProducts"
+        :key="item.id">
+        <v-card
+          class="ma-2"
+          width="180"
+          elevation="2"
+          @click="goToProduct(item.id)"
+          style="cursor: pointer;">
+          <v-img
+            :src="item.product_image?.[0]?.url"
+            height="180"
+            cover/>
+          <v-card-text>
+            <div class="font-weight-medium text-subtitle-2 mb-1">{{ item.name }}</div>
+            <div class="price-wrapper">
+              <span
+                :class="{ 'text-decoration-line-through text-grey': item.promotional }">
+                {{ formatPrice(item.price) }}
+              </span>
+              <span
+                v-if="item.promotional"
+                class="text-error font-weight-bold ml-1 promotional-price">
+                {{ formatPrice(item.promotional) }}
+              </span>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-slide-group-item>
+    </v-slide-group>
+  </v-col>
+</v-row>
+<v-overlay :model-value="isLoadingProduct" class="d-flex align-center justify-center" persistent>
+  <v-progress-circular indeterminate color="primary" size="64" />
+</v-overlay>
 </v-container>
+  <FloatingContact />
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch  } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useCart } from '@/store/useCart'
 import { useRoute } from 'vue-router'
 import { useSnackbar } from '@/composables/useSnackbar'
+import FloatingContact from '@/components/FloatingContact.vue'
 
 const{showSnackbar} = useSnackbar()
 const route = useRoute()
@@ -291,12 +333,34 @@ const currentImageIndex = ref(0)
 const expandedPanels = ref([])
 const showSizeChart = ref(false)
 const ratings = ref([])
+const relatedProducts = ref([])
+const isLoadingProduct = ref(false)
 
 const averageRating = computed(() => {
   if (ratings.value.length === 0) return 0
   const total = ratings.value.reduce((sum, r) => sum + r.star_rating, 0)
   return total / ratings.value.length
 })
+const fetchRelatedProducts = async (categoryId, excludeProductId) => {
+  try {
+    const res = await axios.get('http://localhost:3000/products')
+
+    relatedProducts.value = res.data.data
+      .filter(p =>
+        p.is_active === true &&                 // ✅ chỉ lấy sản phẩm đang active
+        p.category_id === categoryId &&        // cùng danh mục
+        p.id !== excludeProductId              // không trùng với sản phẩm đang xem
+      )
+      .slice(0, 10) // lấy tối đa 10 sản phẩm
+  } catch (err) {
+    console.error('❌ Lỗi lấy sản phẩm liên quan:', err)
+  }
+}
+
+const goToProduct = (id) => {
+  router.push({ name: 'ProductDetail', params: { id } })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 
 const nextImage = () => {
   if (currentImageIndex.value < product.value.product_image.length - 1) {
@@ -436,6 +500,7 @@ onMounted(async () => {
 
     //đánh giá
     fetchRatings(product.value.id)
+    fetchRelatedProducts(product.value.category_id, product.value.id)
   } catch (err) {
     console.error('❌ Lỗi khi lấy sản phẩm:', err)
   }
@@ -475,6 +540,34 @@ const formatDate = (dateStr) => {
   const d = new Date(dateStr)
   return d.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })
 }
+watch(() => route.params.id, async (newId) => {
+  isLoadingProduct.value = true
+  try {
+    const res = await axios.get(`http://localhost:3000/products/${newId}`)
+    product.value = res.data.data
+    selectedImage.value = product.value.product_image?.[0]?.url
+
+    // Reset các giá trị liên quan
+    selectedColor.value = null
+    selectedSize.value = null
+    quantity.value = 1
+    currentImageIndex.value = 0
+    stockQuantity.value = null
+
+    // Fetch lại đánh giá và sản phẩm liên quan
+    await Promise.all([
+      fetchRatings(product.value.id),
+      fetchRelatedProducts(product.value.category_id, product.value.id)
+    ])
+  } catch (err) {
+    console.error('❌ Lỗi khi reload sản phẩm khi thay đổi ID:', err)
+  } finally {
+    setTimeout(() => {
+      isLoadingProduct.value = false
+    }, 300)
+  }
+})
+
 </script>
 
 <style scoped>
@@ -566,6 +659,24 @@ const formatDate = (dateStr) => {
   color: #444;
   padding-top: 8px;
   padding-bottom: 12px;
+}
+.v-slide-group {
+  overflow-y: hidden;
+}
+.v-card:hover {
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
+}
+.price-wrapper {
+  white-space: nowrap;
+  font-size: 14px;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+}
+
+.promotional-price {
+  font-size: 14px;
 }
 
 </style>

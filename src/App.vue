@@ -2,6 +2,7 @@
   <v-app>
     <v-main>
       <router-view />
+      <ChatBot/>
     </v-main>
     <v-snackbar
       v-model="snackbar.show"
@@ -16,6 +17,7 @@
 
 <script setup>
 import { useSnackbar } from '@/composables/useSnackbar'
-
+import ChatBot from '@/views/ChatBot.vue'
 const { snackbar } = useSnackbar()
+
 </script>
