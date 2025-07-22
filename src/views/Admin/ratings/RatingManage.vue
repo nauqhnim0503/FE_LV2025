@@ -291,7 +291,7 @@ async function updateApprovalStatus(ratingId, status) {
 // Lọc theo từ khóa tìm kiếm
 const filteredOrders = computed(() => {
   const keyword = search.value.toLowerCase().trim();
-  return orders.value.filter(order => {
+  const filtered = orders.value.filter(order => {
     const matchSearch =
       (!keyword) ||
       (order.user?.name && order.user?.name.toLowerCase().includes(keyword)) ||
@@ -299,12 +299,13 @@ const filteredOrders = computed(() => {
       (order?.comment && order?.comment.toLowerCase().includes(keyword)) ||
       (order.user?.phone && order.user?.phone.includes(keyword));
 
-        const matchRating = selectedRating.value === null || order.star_rating === Number(selectedRating.value);
-        const matchStatus = selectedStatus.value === null || order.is_approved === Number(selectedStatus.value);
+      const matchRating = selectedRating.value === null || order.star_rating === Number(selectedRating.value);
+      const matchStatus = selectedStatus.value === null || order.is_approved === Number(selectedStatus.value);
 
 
     return matchSearch && matchStatus&&matchRating;
   });
+  return filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 });
 
 // Trạng thái phê duyệt được cập nhật theo selectedRating
