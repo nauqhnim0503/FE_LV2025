@@ -228,8 +228,6 @@ async function fetchDiscounts() {
     };
   }
 }
-
-
 const filteredDiscounts = computed(() => {
   return discounts.value.filter(discount =>
     discount.code.toLowerCase().includes(search.value.toLowerCase())

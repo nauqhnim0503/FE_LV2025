@@ -66,6 +66,8 @@
             <v-card class="product-card" elevation="2">
               <v-img
                 :src="product.product_image?.[0]?.url || 'https://via.placeholder.com/200'"
+                lazy-src="/spinner.gif"
+                aspect-ratio="1"
                 height="350px"
                 cover/>
             </v-card>
@@ -136,9 +138,14 @@ let scrollLeft = 0
 const scrollContainer = ref(null)
 const scrollContent = ref(null)
 //nhân số lượng mã giảm
-const doubleDiscountCodes = computed(() =>
-  [...discountCodes.value, ...discountCodes.value, ...discountCodes.value, ...discountCodes.value]
-)
+const doubleDiscountCodes = computed(() => {
+  const availableCodes = discountCodes.value.filter(code => {
+    return code.usage_limit == null || code.used_count < code.usage_limit; // kiểm tra mã còn lượt sd
+  });
+
+  // Nhân lên nhiều lần
+  return [...availableCodes, ...availableCodes, ...availableCodes, ...availableCodes];
+});
 //hover
 const pauseScroll = () => {
   if (scrollContent.value) {

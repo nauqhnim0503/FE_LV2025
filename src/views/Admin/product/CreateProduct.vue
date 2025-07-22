@@ -31,7 +31,7 @@
 
                   <v-row>
                     <v-col cols="6">
-                      <v-text-field v-model="product.promotional" label="Giá khuyến mãi" type="number" variant="outlined" dense rounded="lg" :rules="[required, positiveNumber]" />
+                      <v-text-field v-model="product.promotional" label="Giá khuyến mãi" type="number" variant="outlined" dense rounded="lg" :rules="[promotionalPriceRule,required, positiveNumber]" />
                     </v-col>
                   </v-row>
 
@@ -280,6 +280,13 @@ const previewMainImage = ref(null)
 const previewSubImages = ref([null, null, null, null])
 const required = (v) => !!v || 'Trường này là bắt buộc.'
 const positiveNumber = (v) => (v > 0) || 'Phải là số dương.'
+const promotionalPriceRule = (v) => {
+  if (v === null || v === undefined || v === '') return true
+  const price = Number(product.value.price)
+  const promo = Number(v)
+  if (isNaN(promo) || isNaN(price)) return true
+  return promo < price || 'Giá khuyến mãi phải nhỏ hơn giá bán.'
+}
 
 const product = ref({
   name: '', price: null, promotional: null, description: '',
@@ -427,10 +434,6 @@ const generateVariants = () => {
   selectedSizes.value = []
   defaultQuantity.value = 1
 }
-
-
-
-
 const triggerImageUpload = (index) => {
   fileInput.value.dataset.index = index
   fileInput.value.click()
@@ -481,6 +484,10 @@ const submitProduct = async () => {
   const invalidVariant = product.value.variants.find(v => !v.size_id || !v.color_id || v.stock_quantity == null)
   if (invalidVariant) return showSnackbar('Điền đầy đủ thông tin biến thể.', 'warning')
 
+  if (!product.value.main_image && product.value.sub_images.every(img => !img)) {
+    return showSnackbar('Cần ít nhất một ảnh sản phẩm.', 'warning')
+  }
+  
   loading.value = true
   const formData = new FormData()
   Object.entries({

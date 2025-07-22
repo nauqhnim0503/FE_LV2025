@@ -86,7 +86,7 @@
               <div>
                 <div><strong>Họ tên:</strong> {{ item.name || '—' }}</div>
                 <div><strong>Địa chỉ:</strong> {{ item.address || '—' }}</div>
-                <div><strong>Điện thoại:</strong> {{ item.phone || '—' }}</div>
+                <div><strong>Điện thoại:</strong> {{ item.phone || '—' }}</div>          
               </div>
             </template>
             <!-- phương thức thanh toán -->

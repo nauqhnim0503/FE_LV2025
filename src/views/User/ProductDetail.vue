@@ -74,8 +74,7 @@
               v-for="(color, index) in colors"
               :key="color.id"
               cols="2"
-              class="text-center"
-            >
+              class="text-center">
               <v-img
                 :src="color.code"
                 height="60"
@@ -105,8 +104,7 @@
       :key="size.id"
       class="mx-1 mt-2 size-option"
       :class="{ 'active-size': selectedSize === size.id }"
-      @click="selectedSize = size.id"
-    >
+      @click="selectedSize = size.id">
       {{ size.name }}
     </v-btn>
   </v-row>
@@ -170,7 +168,7 @@
       </template>
     </v-expansion-panel-title>
     <v-expansion-panel-text>
-      <div>
+      <div class="description-text">
         <p v-for="(line, index) in product.description?.split('\n')" :key="index">
           {{ line }}
         </p>
@@ -185,13 +183,12 @@
         <v-icon class="expand-icon" :class="{ rotate: expandedPanels.includes(1) }">mdi-chevron-down</v-icon>
       </template>
     </v-expansion-panel-title>
-    <v-expansion-panel-text >
-      <div class="panel-content">
-        - Giặt tay để tránh bay màu hoặc xù lông, ủi nhiệt độ bình thường.<br>
-        - Giặt tay để tránh bay màu hoặc xù lông, ủi nhiệt độ bình thường.<br>
-        - Không vắt hoặc xoắn mạnh vì điều này có thể gây ra các nếp nhăn và ảnh hưởng đến độ bền, cấu trúc của vải.<br>
-        - Phơi, ủi mặt trái sản phẩm.
-      </div>
+    <v-expansion-panel-text>
+      <ul class="care-instructions">
+        <li>Giặt tay để tránh bay màu hoặc xù lông, ủi nhiệt độ bình thường.</li>
+        <li>Không vắt hoặc xoắn mạnh vì điều này có thể gây ra các nếp nhăn và ảnh hưởng đến độ bền, cấu trúc của vải.</li>
+        <li>Phơi, ủi mặt trái sản phẩm.</li>
+      </ul>
     </v-expansion-panel-text>
   </v-expansion-panel>
 </v-expansion-panels>
@@ -208,9 +205,9 @@
             <v-icon
               v-for="n in 5"
               :key="n"
-              color="yellow"
+              :color="getStarColor(n)"
               size="22">
-              mdi-star
+              {{ getStarIcon(n) }}
             </v-icon>
           </span>
           <span class="me-3 text-subtitle-1">
@@ -341,6 +338,16 @@ const averageRating = computed(() => {
   const total = ratings.value.reduce((sum, r) => sum + r.star_rating, 0)
   return total / ratings.value.length
 })
+const getStarIcon = (n) => {
+  const rating = averageRating.value
+  if (n <= Math.floor(rating)) return 'mdi-star' // Sao đầy
+  if (n - rating <= 0.5) return 'mdi-star-half-full' // Sao nửa
+  return 'mdi-star-outline' // Sao rỗng
+}
+
+const getStarColor = (n) => {
+  return n <= Math.ceil(averageRating.value) ? 'yellow' : 'grey'
+}
 const fetchRelatedProducts = async (categoryId, excludeProductId) => {
   try {
     const res = await axios.get('http://localhost:3000/products')
@@ -452,6 +459,7 @@ const colors = computed(() => {
   return product.value.product_variants
     ?.filter((v) => v.colors != null)  // bỏ các phần tử có colors null
     .filter((v) => {
+      if (selectedSize.value && v.size_id !== selectedSize.value) return false
       if (!seen.has(v.color_id)) {
         seen.set(v.color_id, true)
         return true
@@ -469,6 +477,7 @@ const sizes = computed(() => {
   return product.value.product_variants
     ?.filter((v) => v.size_id && v.sizes != null)
     .filter((v) => {
+      if (selectedColor.value && v.color_id !== selectedColor.value) return false
       if (!seen.has(v.size_id)) {
         seen.add(v.size_id)
         return true
@@ -677,6 +686,25 @@ watch(() => route.params.id, async (newId) => {
 
 .promotional-price {
   font-size: 14px;
+}
+.description-text p {
+  margin-bottom: 10px;
+  line-height: 1.6;
+  text-align: justify; 
+  font-size: 15px;
+  color: #333;
+}
+.care-instructions {
+  padding-left: 20px;
+  font-size: 15px;
+  color: #444;
+  line-height: 1.6;
+  text-align: justify;
+}
+
+.care-instructions li {
+  margin-bottom: 8px;
+  list-style-type: disc;
 }
 
 </style>

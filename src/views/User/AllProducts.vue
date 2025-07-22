@@ -4,8 +4,7 @@
       src="https://theme.hstatic.net/1000197303/1001046599/14/collection_banner.jpg?v=16303"
       height="400"
       cover
-      class="rounded-lg mb-6"
-    />
+      class="rounded-lg mb-6"/>
     <!-- 🖼️ Lọc theo Danh mục bằng ảnh -->
     <h2 class="mb-4 font-weight-bold">Mua sắm theo danh mục</h2>
     <!-- 🖼️ Danh mục -->
@@ -15,27 +14,22 @@
     :key="category.name"
     cols="6"
     sm="3"
-    md="2"
-  >
+    md="2">
     <v-fade-transition>
       <div
         v-show="selectedCategory === 'Tất cả' || category.name === 'Tất cả' || selectedCategory === category.name"
         class="category-card"
-        @click="selectedCategory = category.name"
-      >
+        @click="selectedCategory = category.name">
         <v-img
           :src="category.image"
           height="100"
           class="rounded-lg"
-          contain
-        />
+          contain/>
         <div
           class="text-center mt-2 font-weight-medium"
           :class="{
             'text-primary': selectedCategory === category.name,
-            'text-black': selectedCategory !== category.name
-          }"
-        >
+            'text-black': selectedCategory !== category.name}">
           {{ category.name }}
         </div>
       </div>
@@ -51,27 +45,22 @@
     :key="brand.name"
     cols="6"
     sm="3"
-    md="2"
-  >
+    md="2">
     <v-fade-transition>
       <div
         v-show="selectedBrand === 'Tất cả' || brand.name === 'Tất cả' || selectedBrand === brand.name"
         class="category-card"
-        @click="selectedBrand = brand.name"
-      >
+        @click="selectedBrand = brand.name">
         <v-img
           :src="brand.image"
           height="100"
           class="rounded-lg"
-          contain
-        />
+          contain/>
         <div
           class="text-center mt-2 font-weight-medium"
           :class="{
             'text-success': selectedBrand === brand.name,
-            'text-black': selectedBrand !== brand.name
-          }"
-        >
+            'text-black': selectedBrand !== brand.name}">
           {{ brand.name }}
         </div>
       </div>
@@ -147,13 +136,13 @@
       </v-col>
     </v-row>
 
-    <!-- 🧭 Drawer bên phải để chứa các bộ lọc nâng cao -->
+    <!-- bộ lọc nâng cao -->
     <v-navigation-drawer
       v-model="drawer"
       location="right"
       temporary
       width="300"
-      style="background-color: white;">
+      style="background-color: white;z-index: 10000;">
       <!-- Thanh tiêu đề -->
       <v-toolbar flat class="justify-center">
         <v-toolbar-title
@@ -175,21 +164,18 @@
       v-for="color in allColors"
       :key="color.id"
       cols="6"
-      class="d-flex justify-center"
-    >
+      class="d-flex justify-center">
       <v-btn
-  size="small"
-  :class="['color-btn', selectedColor === color.id ? 'color-btn--active' : '']"
-  :style="getColorButtonStyle(color)"
-  @click="selectedColor = selectedColor === color.id ? null : color.id"
->
-  {{ color.name }}
-</v-btn>
-    </v-col>
-  </v-row>
-</div>
+        size="small"
+        :class="['color-btn', selectedColor === color.id ? 'color-btn--active' : '']"
+        :style="getColorButtonStyle(color)"
+        @click="selectedColor = selectedColor === color.id ? null : color.id">
+        {{ color.name }}
+      </v-btn>
+          </v-col>
+        </v-row>
+      </div>
 
-      
         <!-- Bộ lọc kích thước -->
         <div class="mb-6">
           <div class="text-subtitle-2 font-weight-medium mb-2">Kích thước</div>
@@ -197,16 +183,14 @@
             <v-col
               v-for="size in allSizes"
               :key="size"
-              cols="4"
-            >
+              cols="4">
               <v-btn
                 block
                 variant="outlined"
                 size="small"
                 :color="selectedSize === size ? 'primary' : ''"
                 class="text-none"
-                @click="selectedSize = selectedSize === size ? null : size"
-              >
+                @click="selectedSize = selectedSize === size ? null : size">
                 {{ size }}
               </v-btn>
             </v-col>
@@ -273,6 +257,8 @@
               <v-img
                 :src="product.product_image?.[0]?.url ||'https://via.placeholder.com/200'"
                 height="350px"
+                lazy-src="/spinner.gif"
+                aspect-ratio="1"
                 cover/>
             </v-card>
           </router-link>

@@ -63,7 +63,9 @@
                 <v-img
                   :src="item.product?.product_image?.[0]?.url"
                   class="order-image rounded"
-                  contain/>
+                  contain
+                  lazy-src="/spinner.gif"
+                  aspect-ratio="1"/>
               </div>
               <div class="flex-grow-1">
                 <div class="text-body-1 font-weight-medium">{{ item.product?.name || 'Không rõ sản phẩm' }}</div>

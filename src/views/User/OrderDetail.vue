@@ -56,6 +56,8 @@
             :src="item.product?.product_image?.[0]?.url"
             width="50"
             height="100"
+            lazy-src="/spinner.gif"
+            aspect-ratio="1"
             class="custom-img rounded me-4 bg-grey-lighten-3"
             cover/>
 

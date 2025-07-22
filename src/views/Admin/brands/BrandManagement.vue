@@ -119,7 +119,7 @@ function confirmDelete(item) {
 
 const headers = [
   { title: 'ID', key: 'id',align:'left',width:'50' },
-  { title: 'Tên thương hiệu', key: 'name',align:'left'},
+  { title: 'Tên thương hiệu', key: 'name',align:'left',},
   { title: 'Logo', key: 'image',align:'left',width:'200' },
   { title: 'Ngày tạo', key: 'createdAt',align:'left',width:'200' },
   { title: 'Thao tác', key: 'actions',align:'center',width:'120' }
@@ -136,6 +136,7 @@ onMounted(async () => {
 
 const filteredBrands = computed(() => {
   return brands.value.filter(b =>
+    // /^[^\d]*$/.test(b.name) &&
     b.name.toLowerCase().includes(search.value.toLowerCase())
   );
 });

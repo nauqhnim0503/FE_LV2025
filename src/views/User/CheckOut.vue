@@ -96,8 +96,7 @@
         class="d-flex align-center pa-3 mb-3 "
         style="border-radius: 12px; border: 1px solid #ddd; cursor: pointer"
         :class="paymentMethod === method.value ? 'border-black' : ''"
-        @click="paymentMethod = method.value"
-      >
+        @click="paymentMethod = method.value">
         <div class="d-flex align-center " style="gap: 12px; margin-left: 0">
           <v-radio
             :model-value="paymentMethod"
@@ -244,27 +243,27 @@
     <div style="flex-grow: 1; overflow-y: auto; padding: 0 16px 16px 16px; box-sizing: border-box;">
       <!-- Thông tin sản phẩm -->
       <v-card-text
-  style="
-    background: white;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 16px;
-    width: 100%;
-    box-sizing: border-box;
-    margin-top: 0;">
-  <v-row>
-    <v-col cols="4">
-      <v-img :src="selectedItem?.image" height="60" />
-      <div v-if="outOfStock" style="color: red; font-weight: bold; margin-top: 8px; font-size: 14px;">
-        Hết hàng
-      </div>
-    </v-col>
-    <v-col cols="8">
-      <div class="font-weight-medium">{{ selectedItem?.name }}</div>
-      <div class="text-red font-weight-bold price">{{ formatPrice(selectedItem?.price || 0) }}</div>
-    </v-col>
-  </v-row>
-</v-card-text>
+          style="
+          background: white;
+          border-radius: 8px;
+          padding: 16px;
+          margin-bottom: 16px;
+          width: 100%;
+          box-sizing: border-box;
+          margin-top: 0;">
+        <v-row>
+          <v-col cols="4">
+            <v-img :src="selectedItem?.image" height="60" />
+            <div v-if="outOfStock" style="color: red; font-weight: bold; margin-top: 8px; font-size: 14px;">
+              Hết hàng
+            </div>
+          </v-col>
+          <v-col cols="8">
+            <div class="font-weight-medium">{{ selectedItem?.name }}</div>
+            <div class="text-red font-weight-bold price">{{ formatPrice(selectedItem?.price || 0) }}</div>
+          </v-col>
+        </v-row>
+      </v-card-text>
 
       <!-- Chọn màu -->
       <v-card-text
@@ -379,6 +378,8 @@
                   v-for="(code, index) in savedCodes"
                   :key="index"
                   :value="code.code"
+                  :disabled="code.isDisabled"
+                  :class="{ 'disabled-discount': code.isDisabled }"
                   class="my-2">
                   <template #label>
                     <div>
@@ -394,6 +395,11 @@
                         <span v-if="code.min_order_value">
                           đơn từ {{ code.min_order_value.toLocaleString('vi-VN') }}₫
                         </span>
+                      </div>
+                      <div
+                        v-if="code.isDisabled"
+                        class="text-caption text-red mt-1">
+                        ⚠ Đơn hàng chưa đủ điều kiện sử dụng mã này
                       </div>
                     </div>
                   </template>
@@ -559,7 +565,21 @@ onMounted(async () => {
   const data = sessionStorage.getItem('checkoutProduct')
   if (data) {
     productToCheckout.value = JSON.parse(data)
-    sessionStorage.removeItem('checkoutProduct') // Xóa đi nếu muốn
+    sessionStorage.removeItem('checkoutProduct') // Xóa sản phẩm 
+  }
+  const user = getUser()
+  if(user?.id){
+    try{
+      const {data} = await axios.get(`http://localhost:3000/users/profile/${user.id}`)
+      const profile = data.data
+
+      shipping.value.name = profile.name || ''
+      shipping.value.phone = profile.phone || ''
+      shipping.value.email = profile.email || ''
+
+    }catch(err){
+      console.error('Lỗi khi lấy thông tin người dùng:', err)
+    }
   }
 })
 
@@ -715,37 +735,46 @@ const openDiscountDialog = async () => {
     const res = await axios.get('http://localhost:3000/discount_codes/home')
     const allDiscounts = res.data.data || []
 
-    // Lọc để hiển thị (không ghi đè vào localStorage)
-    const validDiscounts = saved.filter(discount => {
+    const allSaved = saved.map(discount => {
       const d = allDiscounts.find(x => x.code === discount.code)
-      if (!d) return false
+      if (!d) return null
 
       const now = new Date()
-
       const isStarted = new Date(d.start_date) <= now
       const notExpired = new Date(d.end_date) > now
       const notUsedUp = d.used_count < d.usage_limit
       const isActive = d.is_active
       const meetsOrderValue = originalTotal.value >= d.min_order_value
-      return notExpired && notUsedUp && isActive && meetsOrderValue && isStarted
-    })
-    savedCodes.value = validDiscounts
+
+      // Tính số tiền giảm thực tế
+      let actualDiscount = 0
+      if (d.discount_type === 'percent') {
+        actualDiscount = Math.round(originalTotal.value * d.discount_value / 100)
+      } else {
+        actualDiscount = d.discount_value
+      }
+      actualDiscount = Math.min(actualDiscount, originalTotal.value)
+    
+      return {
+        ...d,
+        actual_discount: actualDiscount,
+        isDisabled: !(isStarted && notExpired && notUsedUp && isActive && meetsOrderValue)
+      }
+    }).filter(Boolean)
+
+    allSaved.sort((a, b) => b.actual_discount - a.actual_discount)
+    savedCodes.value = allSaved
     selectedDiscountCode.value = discountCode.value
     showSavedCodes.value = true
-
   } catch (err) {
     console.error('Không thể tải hoặc kiểm tra mã đã lưu:', err)
     showSnackbar('Không thể tải danh sách mã giảm giá đã lưu.', 'error')
   }
 }
-
-
 const applySelectedDiscount = () => {
   discountCode.value = selectedDiscountCode.value
   showSavedCodes.value = false
 }
-
-
 const shippingErrors = reactive({
   name: '',
   phone: '',
@@ -758,8 +787,6 @@ const shippingErrors = reactive({
 
 function validateShipping() {
   let valid = true;
-
-  
   const nameRegex = /^[a-zA-Zàáạảãâấầậẩẫăắằặẳẵđèéẹẻẽêếềệểễíìịỉĩóòọỏõôốồộổỗơớờợởỡúùụủũưứừựửữýỳỷỹỵ\s]+$/;
   if (!shipping.value.name) {
     shippingErrors.name = 'Vui lòng nhập họ tên';
@@ -870,8 +897,6 @@ async function placeOrder() {
     payment_method: paymentMethod.value.toUpperCase(),
     items: itemsToOrder
   };
-
-
   try {
     console.log("🚀 orderPayload gửi:", orderPayload);
     const response = await axios.post('http://localhost:3000/orders', orderPayload);
@@ -909,9 +934,7 @@ async function placeOrder() {
   }
 }
 
-
 const productVariants = ref([])
-
 const filteredSizes = computed(() => {
   // Chỉ lọc nếu đã chọn màu, còn chưa thì show toàn bộ size
   if (!selectedColor.value) return availableSizes.value
@@ -935,7 +958,6 @@ const filteredColors = computed(() => {
   ]
 })
 
-
 const openVariantDialog = async (item) => {
   selectedItem.value = { ...item }
 
@@ -945,12 +967,9 @@ const openVariantDialog = async (item) => {
   try {
     const res = await axios.get(`http://localhost:3000/products/${item.productId}`)
     const variants = res.data.data.product_variants || []
-
     productVariants.value = variants
-
     availableColors.value = [...new Set(variants.map(v => v.colors?.name))]
     availableSizes.value = [...new Set(variants.map(v => v.sizes?.name).filter(Boolean))]
-
     // ❗ Không set selectedColor/selectedSize ngay để người dùng tự chọn lại
     selectedColor.value = ''
     selectedSize.value = ''
@@ -959,7 +978,6 @@ const openVariantDialog = async (item) => {
     showSnackbar('Không tìm thấy sản phẩm để lấy phân loại. Vui lòng thử lại.','warning')
   }
 }
-
 
 const updateItemWithVariant = (item, variant) => {
   item.color = selectedColor.value;
@@ -1033,5 +1051,8 @@ const outOfStock = ref(false)
 .variant-option.dimmed {
   opacity: 0.5;
 }
-
+.disabled-discount {
+  opacity: 0.5;
+  pointer-events: none;
+}
 </style>

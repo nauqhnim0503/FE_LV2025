@@ -54,7 +54,7 @@
                         variant="outlined"
                         dense
                         rounded="lg"
-                        :rules="[required, positiveNumber]"
+                        :rules="[promotionalPriceRule,required,positiveNumber]"
                       ></v-text-field>
                     </v-col>
                   </v-row>
@@ -474,7 +474,13 @@ const positiveNumber = (v) => {
   const num = Number(v)
   return (!isNaN(num) && num > 0) || 'Phải là số dương.'
 }
-
+const promotionalPriceRule = (v) => {
+  if (v === null || v === undefined || v === '') return true
+  const price = Number(product.value.price)
+  const promo = Number(v)
+  if (isNaN(promo) || isNaN(price)) return true
+  return promo < price || 'Giá khuyến mãi phải nhỏ hơn giá bán.'
+}
 const uniqueName = (v) => {
   if (!v) return true;
   const currentName = v.trim().toLowerCase();
@@ -781,12 +787,11 @@ const saveQuickVariant = async () => {
 // Form Submission
 // ======================
 const submitProduct = async () => {
-  const isValid = await formRef.value?.validate?.()
-  if (!isValid) {
+  const result = await formRef.value?.validate?.()
+  if (!result.valid) {
     showSnackbar('Vui lòng kiểm tra lại các trường nhập liệu.', 'error')
     return
   }
-
   try {
     // Lấy danh sách sản phẩm hiện có
     const res = await productService.getProductsList()
@@ -820,6 +825,13 @@ const submitProduct = async () => {
     return
   }
 
+  const hasMainImage = !!product.value.main_image_preview || product.value.main_image instanceof File
+  const hasSubImages = product.value.sub_images_preview.some(img => !!img) || product.value.sub_images.some(file => file instanceof File)
+  if (!hasMainImage && !hasSubImages) {
+    showSnackbar('Vui lòng thêm ít nhất một hình ảnh cho sản phẩm.', 'error')
+    return
+  }
+  
   const invalidVariant = product.value.variants.some(variant =>
     !variant.size_id || !variant.color_id || variant.stock_quantity === null
   )

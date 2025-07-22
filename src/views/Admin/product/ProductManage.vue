@@ -188,8 +188,7 @@
         :color="snackbar.color"
         timeout="3000"
         top
-        right
-      >
+        right>
         {{ snackbar.message }}
         <template #actions>
           <v-btn text @click="snackbar.show = false">Đóng</v-btn>
@@ -296,10 +295,9 @@
         axios.get('http://localhost:3000/categories'),
         axios.get('http://localhost:3000/products')
       ]);
-
       brands.value = brandsRes.data.data;
       categories.value = categoriesRes.data.data;
-      products.value = productsRes.data.data;
+      products.value = productsRes.data.data; //.slice(0,5);
     } catch (err) {
       console.error('Lỗi khi fetch dữ liệu:', err);
     }
@@ -327,7 +325,6 @@
     loadingIds.value.push(item.id);
     try {
       const newStatus = !item.is_active;
-
       await axios.patch(`http://localhost:3000/products/${item.id}`, {
         is_active: newStatus
       });

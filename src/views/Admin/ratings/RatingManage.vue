@@ -172,7 +172,7 @@
       <section class="section-block">
         <h3 class="section-title">📦 Sản phẩm</h3>
         <div>• Tên sản phẩm: <strong>{{ selectedRatingDetail.product?.name || '—' }}</strong></div>
-        <div>• Mã sản phẩm: <strong>{{ selectedRatingDetail.product?.id || '—' }}</strong></div>
+        <div>• Mã sản phẩm: <strong>{{ selectedRatingDetail.product?.id || '—' }}</strong></div>      
       </section>
 
       <!-- Đánh giá -->
@@ -249,7 +249,13 @@ onMounted(fetchOrders);
 async function fetchOrders() {
   try {
     const res = await axios.get('http://localhost:3000/rating');
-    orders.value = res.data.data;
+    orders.value = res.data.data.filter(o =>
+      o &&
+      o.product &&
+      o.user && // ❗ bắt buộc có user
+      o.star_rating != null &&
+      o.is_approved != null
+    );
   } catch (err) {
     console.error('Lỗi khi fetch đơn hàng:', err);
     showSnackbar('Lỗi khi tải danh sách đánh giá', 'error');
