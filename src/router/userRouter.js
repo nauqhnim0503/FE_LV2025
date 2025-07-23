@@ -64,6 +64,11 @@ const userRouter = [{
       name: 'ContactPage',
       component: () => import('../views/User/Contact.vue'),
     },
+    {
+      path: 'reels',
+      name: 'Reels',
+      component: () => import('../views/User/ReelsVideo.vue'),
+    },
   ]
 }]
 

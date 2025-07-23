@@ -1,5 +1,6 @@
 <template>
   <v-container>
+    <ReelsVideo />
     <div v-if="discountCodes.length" class="discount-codes mb-6">
       <h3 class="mb-2 font-weight-bold">Ưu đãi giảm giá</h3>
       <div class="scroll-wrapper"
@@ -126,7 +127,7 @@ import { ref, onMounted,computed } from "vue";
 import axios from "axios";
 import { useSnackbar } from '@/composables/useSnackbar'
 import FloatingContact from '@/components/FloatingContact.vue'
-
+import ReelsVideo from "./ReelsVideo.vue";
 
 const { snackbar,success, warning, error } = useSnackbar()
 const products = ref([]);

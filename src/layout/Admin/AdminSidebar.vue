@@ -89,6 +89,7 @@
           { title: "Đơn hàng", icon: "mdi-cart", route: "/admin/order" },
           { title: "Mã giảm giá", icon: "mdi-sale", route: "/admin/discount" },
           { title: "Đánh giá", icon: "mdi-flower", route: "/admin/ratings" },
+          { title: "Reels", icon: "mdi-video", route: "/admin/reels" },
         ]
       }
     }

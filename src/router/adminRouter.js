@@ -165,6 +165,27 @@ const adminRouter =[
                 },
             ]
             },
+            {
+                path: 'reels',
+                component: () => import('../views/Admin/reels/LayoutReels.vue'),
+                children:[
+                {
+                    path:"",
+                    name:"ReelsManagement",
+                    component: () => import('../views/Admin/reels/ManageReels.vue'),
+                },
+                {
+                    path:"update/:id",
+                    name:"updateReels",
+                    component: () => import('../views/Admin/reels/UpdateReels.vue'),
+                },
+                {
+                    path:"upload",
+                    name:"uploadReels",
+                    component: () => import('../views/Admin/reels/AdminUploadReel.vue'),
+                },
+            ]
+            },
            {
             path: 'home',
             component: () => import('../views/HomeView.vue'),
