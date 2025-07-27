@@ -88,7 +88,6 @@ onMounted(async () => {
     reels.value = res.data.map(item => ({
       ...item,
       video_url: item.video_url.replace(/\\/g, '/')
-      // Không lấy description nữa
     }))
   } catch (err) {
     console.error('Lỗi load reels:', err)

@@ -184,13 +184,12 @@ const handleSubmit = async () => {
     snackbar.value = { show: true, text: '✅ Cập nhật thành công', color: 'success' }
     router.push({ name: 'discountManagement' })
   } catch (err) {
-    snackbar.value = { show: true, text: '❌ Lỗi khi cập nhật', color: 'error' }
+    const message = err.response?.data?.message || '❌ Lỗi khi cập nhật';
+    snackbar.value = { show: true, text: message, color: 'error' }
   } finally {
     isSubmitting.value = false
   }
 }
-
-
 const formatDateTime = (dateStr) => {
   if (!dateStr) return ''
   const d = new Date(dateStr)

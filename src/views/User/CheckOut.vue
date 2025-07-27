@@ -690,12 +690,8 @@ const applyDiscount = async () => {
       showSnackbar('Mã giảm giá không hợp lệ hoặc đã hết hạn.', 'warning')
       return
     }
-    
-
     const discount = discountArray.find(d => d.code.toUpperCase() === discountCode.value.toUpperCase())
     const now = new Date()
-    
-
     if (!discount.is_active) {
       showSnackbar('Mã giảm giá không hợp lệ hoặc đã hết hạn.', 'warning')
       return
@@ -712,17 +708,13 @@ const applyDiscount = async () => {
       showSnackbar(`Đơn hàng phải tối thiểu ${formatCurrency(discount.min_order_value)} để áp dụng mã giảm giá.`, 'warning')
       return
     }
-
     appliedDiscountId.value = discount.id
-
     if (discount.discount_type === 'percent') {
       discountAmount.value = Math.round(originalTotal.value * (discount.discount_value / 100))
     } else if (discount.discount_type === 'fixed') {
       discountAmount.value = discount.discount_value
     }
-
     discountAmount.value = Math.min(discountAmount.value, originalTotal.value)
-
     showSnackbar('Mã giảm giá đã được áp dụng!', 'success')
   } catch (error) {
     console.error('Lỗi khi áp dụng mã giảm giá:', error)
