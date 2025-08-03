@@ -127,24 +127,28 @@
     </v-card-actions>
   </v-card>
 </v-dialog>
-
-
-
-
-        
         <!-- Tồn kho -->
         <div v-if="selectedColor && selectedSize" class="text-caption mb-3 pl-1 pt-1" :class="stockQuantity === 0 ? 'text-error' : 'text-success'">
           {{ stockQuantity === 0 ? 'Hết hàng' : 'Số lượng còn lại: ' + stockQuantity }}
         </div>
-
         <!-- Số lượng -->
         <div class="mb-5 pl-1">
           <div class="font-weight-medium mb-2 pl-1 pt-3">Số lượng</div>
           <v-btn icon @click="decreaseQty" :disabled="quantity <= 1 || stockQuantity === 0">-</v-btn>
           <span class="mx-3">{{ quantity }}</span>
+          <!-- <v-text-field
+            v-model.number="quantity"
+            class="mx-2"
+            type="number"
+            min="1"
+            :max="stockQuantity"
+            hide-details
+            single-line
+            style="width: 60px"
+            :disabled="stockQuantity === 0"
+          /> -->
           <v-btn icon @click="increaseQty" :disabled="quantity >= stockQuantity || stockQuantity === 0">+</v-btn>
         </div>
-
         <!-- Nút mua -->
         <div class="d-flex">
           <v-btn color="primary" class="me-4" @click="handleAddToCart" :disabled="stockQuantity === 0">
@@ -433,8 +437,17 @@ const handleAddToCart = async () => {
   const payload = getCartItemPayload()
   if (!payload) return
 
-  await addToCart(payload)
-  showSnackbar('Đã thêm sản phẩm vào giỏ hàng','info')
+  if (payload.quantity > stockQuantity.value) {
+    payload.quantity = stockQuantity.value
+    showSnackbar('Số lượng vượt quá tồn kho, đã điều chỉnh về tối đa', 'warning')
+  }
+
+  try {
+    await addToCart(payload) // 👈 phải có await
+    showSnackbar('Đã thêm sản phẩm vào giỏ hàng', 'info')
+  } catch (error) {
+    showSnackbar(error.message, 'error')
+  }
 }
 
 const buyNow = async () => {

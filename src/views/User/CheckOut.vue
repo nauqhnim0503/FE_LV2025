@@ -921,9 +921,17 @@ async function placeOrder() {
       showSnackbar("Đặt hàng thất bại: " + responseData.message);
     }
   } catch (error) {
-    console.error("Lỗi khi đặt hàng:", error);
-    showSnackbar("Lỗi hệ thống khi đặt hàng.",'error');
+  console.error("🔥 Lỗi khi đặt hàng:", error);
+
+  // Nếu backend trả về response có message cụ thể
+  const backendMessage = error?.response?.data?.message;
+
+  if (backendMessage) {
+    showSnackbar(backendMessage, 'error');
+  } else {
+    showSnackbar("Lỗi hệ thống khi đặt hàng.", 'error');
   }
+}
 }
 
 const productVariants = ref([])

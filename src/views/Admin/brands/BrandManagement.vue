@@ -136,7 +136,7 @@ onMounted(async () => {
 
 const filteredBrands = computed(() => {
   return brands.value.filter(b =>
-    // /^[^\d]*$/.test(b.name) &&
+    // /^[^\d]*$/.test(b.name) && //lọc bỏ số 
     b.name.toLowerCase().includes(search.value.toLowerCase())
   );
 });

@@ -19,12 +19,8 @@ export function useCart() {
 
   // Thêm sản phẩm vào giỏ
   const addToCart = async (product) => {
-    try {
-      await CartService.addToCart(product)
-      updateCartData()
-    } catch (error) {
-      alert(error.message)
-    }
+    await CartService.addToCart(product)
+    updateCartData()
   }
 
   // Cập nhật số lượng

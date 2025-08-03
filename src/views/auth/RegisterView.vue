@@ -18,7 +18,7 @@
         <input
           v-model.trim="username"
           type="text"
-          placeholder="Tên đăng nhập"
+          placeholder="Email"
           :class="{ error: errors.username }"
         />
         <small v-if="errors.username" class="error-text">{{ errors.username }}</small>

@@ -270,7 +270,8 @@
       title: 'Ngày tạo',
       key: 'createdAt',
       align: 'center',
-      width: '150'
+      width: '150',
+      //sortable: true
     },
     {
       title: 'Thao tác',
@@ -302,18 +303,25 @@
       console.error('Lỗi khi fetch dữ liệu:', err);
     }
   });
-
+  // tìm kiếm không dấu
+  function removeVietnameseTones(str) {
+    return str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // Bỏ dấu
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D");
+  }
   // Lọc sản phẩm theo search, brand, category, status
   const filteredProducts = computed(() => {
     return products.value.filter((product) => {
-      const matchesSearch = (product.name || '').toLowerCase().includes((search.value || '').toLowerCase());
+      const productName = removeVietnameseTones((product.name || '').toLowerCase());
+      const searchKeyword = removeVietnameseTones((search.value || '').toLowerCase());
+
+      const matchesSearch = productName.includes(searchKeyword);
       //const matchesSearch = String(product.price).includes(search.value || '');
       const matchesBrand = selectedBrand.value !== null ? product.brand_id === selectedBrand.value : true;
-
       const matchesCategory = selectedCategory.value !== null ? product.category_id === selectedCategory.value : true;
-
       const matchesStatus = selectedStatus.value !== null ? product.is_active === selectedStatus.value : true;
-
       return matchesSearch && matchesBrand && matchesCategory && matchesStatus;
     });
   });

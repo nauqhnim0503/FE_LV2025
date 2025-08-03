@@ -27,7 +27,7 @@ export class CartService {
       const newQuantity = existingItem.quantity + product.quantity
 
       if (newQuantity > product.maxQuantity) {
-        throw new Error(`Số lượng vượt quá giới hạn tồn kho (${product.maxQuantity})`)
+        throw new Error(`Bạn đã có ${existingItem.quantity} sản phẩm trong giỏ hàng. Không thể thêm ${product.quantity} sản phẩm vì sẽ vượt quá giới hạn mua hàng.`)
       }
 
       existingItem.quantity = newQuantity
